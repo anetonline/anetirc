@@ -3,7 +3,7 @@ ANetIRC - IRC for dos BBSes that produce door.sys and use a fossil driver. WIN32
 
 
 
-================================================================================
+
                           ANET IRC 1.0 - README
                     IRC Client for DOS Bulletin Boards
 ================================================================================
