@@ -1,0 +1,9 @@
+ANET IRC 1.0 - IRC client door for DOS
+BBSes.  Full RFC 1459/2812 client,
+multi-channel, TLS, NickServ auto-id,
+mIRC color, CTCP, tab-complete, twit
+list, mention log.  16-bit DOS door +
+Win32 bridge.  FOSSIL / DOOR.SYS.
+Works with Spitfire, Mystic, Synchronet
+and any standards-compliant BBS.
+

@@ -1,0 +1,133 @@
+================================================================================
+                      ANET IRC 1.0 - Installation Guide
+================================================================================
+
+Prerequisites
+-------------
+  - DOS BBS software that emits a DOOR.SYS drop file on door launch.
+  - FOSSIL driver on the BBS node (BNU/X00/ADF/NetFoss etc.), OR a
+    FOSSIL-emulation layer (for example Synchronet's SEXYZ) that exposes
+    the BBS COM port.
+  - Windows host for the bridge.  The door itself runs inside the BBS.
+
+Files
+-----
+  ANETIRC.EXE         16-bit DOS door, ~60 KB
+  ANETIRC_BRIDGE.EXE  Win32 bridge, multi-node
+  CONFIG.EXE          One-time IRC config editor
+  IRCBANNER.ANS       Optional console banner for the bridge
+
+Step 1 -- Copy files to the door directory
+------------------------------------------
+All four files must live in the same working directory.  The bridge and
+the door exchange state via files in that directory.
+
+On a typical Windows+BBS setup:
+
+  C:\BBS\DOORS\ANETIRC\
+      ANETIRC.EXE
+      ANETIRC_BRIDGE.EXE
+      CONFIG.EXE
+      IRCBANNER.ANS   (optional)
+
+Step 2 -- Run CONFIG.EXE once
+------------------------------
+CONFIG.EXE prompts for:
+
+  BBS Name / SysOp / Description
+  IRC Server (pick from a list or enter your own)
+  Port (6667 plain, 6697 for TLS)
+  TLS yes/no
+  Optional server PASS
+  Default Nick override (blank = use whatever each BBS user picks)
+  USER and Realname (identity sent to the server)
+  Default channel to auto-join
+  Optional NickServ password for auto-IDENTIFY
+  Whether to show MOTD on connect
+
+Output is written to IRCBBS.DAT.  This file is read by
+ANETIRC_BRIDGE.EXE at startup.
+
+Step 3 -- Start the bridge
+--------------------------
+From the door directory:
+
+  ANETIRC_BRIDGE.EXE
+
+Or with diagnostics:
+
+  ANETIRC_BRIDGE.EXE --verbose
+
+Run it as a long-running service or from a scheduled task on boot.  It
+watches ANETIRC.OUT, ANETIRC2.OUT, ..., ANETIRC8.OUT in the CWD and
+activates a node slot as soon as a matching .OUT file appears.
+
+Step 4 -- Configure the BBS door launcher
+-----------------------------------------
+
+Spitfire
+~~~~~~~~
+Add a new external door:
+
+  Command  : C:\BBS\DOORS\ANETIRC\ANETIRC.EXE --dropfile=c:\path\to\door.sys
+  Type     : DOS
+
+Spitfire typically writes DOOR.SYS to the user's node directory; pass
+that path to `--dropfile`.  Run under DOSBox or a VDM that provides
+FOSSIL on the BBS's COM port.
+
+Mystic
+~~~~~~
+Edit the menu command:
+
+  -ED | C:\BBS\DOORS\ANETIRC\ANETIRC.EXE --dropfile=%P\DOOR.SYS
+      | Expecting DOOR.SYS in the DOOR directory.
+      | Make sure "Dropfile: DOOR.SYS" is enabled.
+
+Mystic writes DOOR.SYS automatically to the current temp directory.
+
+Synchronet
+~~~~~~~~~~
+Add an external:
+
+  Command : ANETIRC.EXE --dropfile=%f
+  Options : FOSSIL
+  Dropfile: DOOR.SYS
+
+WWIV
+~~~~
+Add a chain.txt entry pointing to ANETIRC.EXE.  Chain.txt should export
+a DOOR.SYS dropfile.
+
+
+Step 5 -- Per-user setup
+-------------------------
+When a caller launches the door the first time, they're asked for an
+IRC nick.  It's saved in IRCUSER.DAT keyed by their BBS username, along
+with color preferences and decoration.
+
+Every subsequent run reuses the saved nick.
+
+
+Troubleshooting
+----------------
+  - The door opens but there's no output: FOSSIL isn't installed or the
+    COM port doesn't match DOOR.SYS line 1.  Make sure a FOSSIL driver
+    is loaded before the door runs.
+  - "Bridge connect failed": file permission or CWD mismatch.  The
+    bridge and the door must agree on the working directory.
+  - IRC says "nick in use": change your saved nick via `/nick` or by
+    editing IRCUSER.DAT.
+  - TLS handshake fails: check `config.exe` TLS selection and that the
+    server is actually listening on the TLS port.
+  - "IRCBBS.DAT not found or incomplete": run CONFIG.EXE.
+
+
+Files the client creates
+-------------------------
+  IRCBBS.DAT       BBS-wide, written by CONFIG.EXE.
+  IRCUSER.DAT      Per-BBS-user settings (nick, colors, twits).
+  IRCMENT.LOG      Mention log (viewed via /mentions).
+  ANETIRC.IN/OUT   Bridge file pair for node 1 (or ANETIRCN.IN/OUT).
+  anetirc_bridge.log  Bridge diagnostic log (verbose mode).
+  IRCUSER.TMP      Temporary during save; removed after rename.
